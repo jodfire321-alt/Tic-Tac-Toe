@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070b16">
+
+<title>Tic Tac Toe | Ultra Arena</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    min-height:100vh;
+    font-family:Arial, Helvetica, sans-serif;
+    color:#fff;
+    background:
+        radial-gradient(circle at 20% 10%, #17305f 0, transparent 30%),
+        radial-gradient(circle at 80% 90%, #24144f 0, transparent 32%),
+        linear-gradient(135deg,#050812,#0a1020 50%,#050711);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    overflow-x:hidden;
+}
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:40px 40px;
+}
+
+.game{
+    width:min(950px,100%);
+    position:relative;
+    z-index:2;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:22px;
+}
+
+.badge{
+    display:inline-block;
+    padding:7px 14px;
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:30px;
+    background:rgba(255,255,255,.06);
+    font-size:12px;
+    letter-spacing:2px;
+    color:#aebee8;
+    margin-bottom:12px;
+}
+
+h1{
+    font-size:clamp(34px,7vw,65px);
+    line-height:1;
+    letter-spacing:-2px;
+    background:linear-gradient(90deg,#fff,#75a9ff,#b77cff);
+    -webkit-background-clip:text;
+    color:transparent;
+    text-shadow:0 0 35px rgba(91,130,255,.18);
+}
+
+.subtitle{
+    color:#8792aa;
+    margin-top:10px;
+    font-size:14px;
+}
+
+.panel{
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(10,15,30,.72);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border-radius:28px;
+    padding:24px;
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.topbar{
+    display:flex;
+    gap:12px;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.modes{
+    display:flex;
+    gap:8px;
+}
+
+button{
+    border:0;
+    color:white;
+    cursor:pointer;
+    font-weight:700;
+    transition:.2s ease;
+}
+
+.mode{
+    padding:10px 14px;
+    border-radius:12px;
+    background:#151d31;
+    color:#8f9ab2;
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.mode.active{
+    color:white;
+    background:linear-gradient(135deg,#315cff,#7046e8);
+    box-shadow:0 8px 25px rgba(75,91,255,.25);
+}
+
+.mode:hover,
+.action:hover{
+    transform:translateY(-2px);
+}
+
+.status{
+    text-align:center;
+    color:#aeb9d1;
+    font-size:15px;
+    margin:5px 0 20px;
+}
+
+.status strong{
+    color:#fff;
+}
+
+.board-wrap{
+    display:flex;
+    justify-content:center;
+}
+
+.board{
+    width:min(500px,100%);
+    aspect-ratio:1;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+}
+
+.cell{
+    position:relative;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.10);
+    background:
+        linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.04),
+        0 12px 30px rgba(0,0,0,.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(48px,11vw,82px);
+    font-weight:900;
+    user-select:none;
+    overflow:hidden;
+}
+
+.cell::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 50% 20%,rgba(255,255,255,.07),transparent 55%);
+    opacity:0;
+    transition:.25s;
+}
+
+.cell:hover::after{
+    opacity:1;
+}
+
+.cell:hover{
+    border-color:rgba(116,146,255,.5);
+    transform:translateY(-2px);
+}
+
+.cell.x{
+    color:#62a5ff;
+    text-shadow:0 0 25px rgba(72,145,255,.55);
+}
+
+.cell.o{
+    color:#c17cff;
+    text-shadow:0 0 25px rgba(175,87,255,.55);
+}
+
+.cell.win{
+    animation:winner .75s infinite alternate;
+    border-color:#fff;
+    background:linear-gradient(145deg,rgba(80,120,255,.25),rgba(173,80,255,.2));
+}
+
+@keyframes winner{
+    from{
+        box-shadow:0 0 10px rgba(105,137,255,.35);
+    }
+    to{
+        box-shadow:0 0 35px rgba(151,94,255,.85);
+    }
+}
+
+.scoreboard{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-top:22px;
+}
+
+.score{
+    padding:14px;
+    border-radius:16px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.07);
+    text-align:center;
+}
+
+.score small{
+    display:block;
+    color:#7f8aa3;
+    font-size:11px;
+    letter-spacing:1px;
+    margin-bottom:5px;
+}
+
+.score b{
+    font-size:24px;
+}
+
+.actions{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:20px;
+}
+
+.action{
+    padding:13px 20px;
+    border-radius:13px;
+    background:#182238;
+    border:1px solid rgba(255,255,255,.08);
+}
+
+.action.primary{
+    background:linear-gradient(135deg,#315cff,#7347e9);
+    box-shadow:0 10px 28px rgba(75,91,255,.22);
+}
+
+.footer{
+    text-align:center;
+    margin-top:18px;
+    color:#5f6b83;
+    font-size:12px;
+}
+
+.win-message{
+    min-height:24px;
+    text-align:center;
+    margin-top:14px;
+    font-weight:800;
+    color:#c5d1ff;
+}
+
+@media(max-width:600px){
+    body{
+        padding:12px;
+    }
+
+    .panel{
+        padding:16px;
+        border-radius:22px;
+    }
+
+    .topbar{
+        justify-content:center;
+    }
+
+    .modes{
+        width:100%;
+    }
+
+    .mode{
+        flex:1;
+    }
+
+    .board{
+        gap:8px;
+    }
+
+    .cell{
+        border-radius:15px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<main class="game">
+
+    <header class="header">
+        <div class="badge">ULTRA ARENA • GAME 01</div>
+        <h1>TIC TAC TOE</h1>
+        <p class="subtitle">Classic strategy. Modern experience.</p>
+    </header>
+
+    <section class="panel">
+
+        <div class="topbar">
+            <div class="modes">
+                <button class="mode active" id="aiMode">VS COMPUTER</button>
+                <button class="mode" id="twoMode">2 PLAYERS</button>
+            </div>
+
+            <button class="action" id="resetScore">Reset Score</button>
+        </div>
+
+        <div class="status" id="status">
+            Your turn — <strong>X</strong>
+        </div>
+
+        <div class="board-wrap">
+            <div class="board" id="board">
+                <button class="cell" data-index="0"></button>
+                <button class="cell" data-index="1"></button>
+                <button class="cell" data-index="2"></button>
+                <button class="cell" data-index="3"></button>
+                <button class="cell" data-index="4"></button>
+                <button class="cell" data-index="5"></button>
+                <button class="cell" data-index="6"></button>
+                <button class="cell" data-index="7"></button>
+                <button class="cell" data-index="8"></button>
+            </div>
+        </div>
+
+        <div class="win-message" id="message"></div>
+
+        <div class="scoreboard">
+            <div class="score">
+                <small>PLAYER X</small>
+                <b id="xScore">0</b>
+            </div>
+
+            <div class="score">
+                <small>DRAWS</small>
+                <b id="drawScore">0</b>
+            </div>
+
+            <div class="score">
+                <small>PLAYER O</small>
+                <b id="oScore">0</b>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="action primary" id="newGame">New Game</button>
+        </div>
+
+    </section>
+
+    <div class="footer">
+        Built with HTML • CSS • JavaScript
+    </div>
+
+</main>
+
+<script>
+const cells = document.querySelectorAll(".cell");
+const statusText = document.getElementById("status");
+const message = document.getElementById("message");
+
+const xScoreEl = document.getElementById("xScore");
+const oScoreEl = document.getElementById("oScore");
+const drawScoreEl = document.getElementById("drawScore");
+
+const aiModeBtn = document.getElementById("aiMode");
+const twoModeBtn = document.getElementById("twoMode");
+
+const newGameBtn = document.getElementById("newGame");
+const resetScoreBtn = document.getElementById("resetScore");
+
+let board = ["","","","","","","","",""];
+let currentPlayer = "X";
+let gameOver = false;
+let vsComputer = true;
+
+let scores = {
+    X: 0,
+    O: 0,
+    draw: 0
+};
+
+const winningLines = [
+    [0,1,2],
+    [3,4,5],
+    [6,7,8],
+    [0,3,6],
+    [1,4,7],
+    [2,5,8],
+    [0,4,8],
+    [2,4,6]
+];
+
+function render(){
+    cells.forEach((cell,index)=>{
+        cell.textContent = board[index];
+
+        cell.classList.remove("x","o");
+
+        if(board[index] === "X"){
+            cell.classList.add("x");
+        }
+
+        if(board[index] === "O"){
+            cell.classList.add("o");
+        }
+    });
+
+    xScoreEl.textContent = scores.X;
+    oScoreEl.textContent = scores.O;
+    drawScoreEl.textContent = scores.draw;
+}
+
+function checkWinner(state = board){
+
+    for(const line of winningLines){
+
+        const [a,b,c] = line;
+
+        if(
+            state[a] &&
+            state[a] === state[b] &&
+            state[a] === state[c]
+        ){
+            return {
+                winner: state[a],
+                line: line
+            };
+        }
+    }
+
+    if(state.every(cell => cell !== "")){
+        return {
+            winner:"draw",
+            line:[]
+        };
+    }
+
+    return null;
+}
+
+function updateStatus(){
+
+    if(gameOver) return;
+
+    if(vsComputer && currentPlayer === "O"){
+        statusText.innerHTML = "Computer is thinking...";
+    }
+    else{
+        statusText.innerHTML =
+            `${currentPlayer === "X" ? "Your" : "Player O's"} turn — <strong>${currentPlayer}</strong>`;
+    }
+}
+
+function makeMove(index,player){
+
+    if(board[index] !== "" || gameOver) return false;
+
+    board[index] = player;
+
+    render();
+
+    return true;
+}
+
+function finishGame(result){
+
+    gameOver = true;
+
+    if(result.winner === "draw"){
+
+        scores.draw++;
+
+        message.textContent = "It's a draw! 🤝";
+        statusText.textContent = "Round complete";
+    }
+    else{
+
+        scores[result.winner]++;
+
+        result.line.forEach(index=>{
+            cells[index].classList.add("win");
+        });
+
+        if(vsComputer){
+
+            message.textContent =
+                result.winner === "X"
+                ? "You win! 🏆"
+                : "Computer wins!";
+        }
+        else{
+            message.textContent =
+                `${result.winner} wins! 🏆`;
+        }
+
+        statusText.textContent = "Round complete";
+    }
+
+    render();
+}
+
+function play(index){
+
+    if(gameOver) return;
+
+    if(vsComputer && currentPlayer !== "X") return;
+
+    if(!makeMove(index,currentPlayer)) return;
+
+    const result = checkWinner();
+
+    if(result){
+        finishGame(result);
+        return;
+    }
+
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+
+    updateStatus();
+
+    if(vsComputer && currentPlayer === "O"){
+        setTimeout(computerMove,420);
+    }
+}
+
+function computerMove(){
+
+    if(gameOver) return;
+
+    const best = findBestMove();
+
+    if(best !== -1){
+
+        makeMove(best,"O");
+
+        const result = checkWinner();
+
+        if(result){
+            finishGame(result);
+            return;
+        }
+
+        currentPlayer = "X";
+        updateStatus();
+    }
+}
+
+function findBestMove(){
+
+    // Win if possible
+    for(let i=0;i<9;i++){
+
+        if(board[i] === ""){
+
+            board[i] = "O";
+
+            if(checkWinner(board)?.winner === "O"){
+                board[i] = "";
+                return i;
+            }
+
+            board[i] = "";
+        }
+    }
+
+    // Block player X
+    for(let i=0;i<9;i++){
+
+        if(board[i] === ""){
+
+            board[i] = "X";
+
+            if(checkWinner(board)?.winner === "X"){
+                board[i] = "";
+                return i;
+            }
+
+            board[i] = "";
+        }
+    }
+
+    // Take center
+    if(board[4] === "") return 4;
+
+    // Take a corner
+    const corners = [0,2,6,8];
+    const freeCorners = corners.filter(i => board[i] === "");
+
+    if(freeCorners.length){
+        return freeCorners[
+            Math.floor(Math.random()*freeCorners.length)
+        ];
+    }
+
+    // Take any available cell
+    const free = board
+        .map((value,index)=>value === "" ? index : null)
+        .filter(index=>index !== null);
+
+    if(free.length){
+        return free[Math.floor(Math.random()*free.length)];
+    }
+
+    return -1;
+}
+
+function newGame(){
+
+    board = ["","","","","","","","",""];
+    currentPlayer = "X";
+    gameOver = false;
+
+    message.textContent = "";
+
+    cells.forEach(cell=>{
+        cell.classList.remove("win");
+    });
+
+    render();
+    updateStatus();
+}
+
+function resetScores(){
+
+    scores = {
+        X:0,
+        O:0,
+        draw:0
+    };
+
+    newGame();
+}
+
+cells.forEach(cell=>{
+
+    cell.addEventListener("click",()=>{
+        play(Number(cell.dataset.index));
+    });
+
+});
+
+aiModeBtn.addEventListener("click",()=>{
+
+    vsComputer = true;
+
+    aiModeBtn.classList.add("active");
+    twoModeBtn.classList.remove("active");
+
+    newGame();
+});
+
+twoModeBtn.addEventListener("click",()=>{
+
+    vsComputer = false;
+
+    twoModeBtn.classList.add("active");
+    aiModeBtn.classList.remove("active");
+
+    newGame();
+});
+
+newGameBtn.addEventListener("click",newGame);
+resetScoreBtn.addEventListener("click",resetScores);
+
+render();
+updateStatus();
+</script>
+
+</body>
+</html>
